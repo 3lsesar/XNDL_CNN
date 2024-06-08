@@ -1,0 +1,17 @@
+copy.bat para copiar archivos al bsc (desde el transfer)
+
+cambiar el launcher y poner el nombre del archivo .py
+-vim launcher.sh
+
+sbatch -A nct_299 -q acc_training launcher.sh 
+
+watch -n 1 squeue  #ver cola
+
+#archivos en orden de creacion
+ls -ltr
+
+#mirar error
+more <archivo>
+cat <archivo>
+
+#copiar cosas fuera del bsc
