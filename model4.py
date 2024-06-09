@@ -165,8 +165,7 @@ def train_cnn():
 
     # Choose optimizer and compile the model
     learning_rate = 0.01
-    mom = 0.8
-    adam = Adam(learning_rate=learning_rate,momentum=mom)
+    adam = Adam(learning_rate=learning_rate)
     model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
     
     #Check model summary!
