@@ -1,18 +1,17 @@
 # VGGNet
+
 import os
 import csv
 import datetime
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from keras.layers import Conv2D, GlobalAveragePooling2D, Dense, Flatten, BatchNormalization, LayerNormalization, AveragePooling2D
+from keras.layers import Conv2D, GlobalAveragePooling2D, Dense, Flatten, BatchNormalization, LayerNormalization
 from keras.optimizers import SGD, Adam, Adamax
-from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
-from keras.initializers import HeNormal
 from tensorflow.keras.initializers import he_normal
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from keras.utils import to_categorical
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
@@ -24,7 +23,7 @@ np.random.seed(42)
 tf.random.set_seed(314)
 
 batch_size = 128
-n_epochs = 50
+n_epochs = 200
 
 train_datagen = ImageDataGenerator(
     rescale=1 / 255.0,
@@ -124,45 +123,63 @@ def plot_loss_variation(history):
     plt.show()
 
 
-def train_lenet():
-    img_rows, img_cols, channels = 256, 256, 3  # Tamaño de la entrada
+def train_cnn():
+    # Definir la arquitectura del modelo siguiendo la imagen
+    img_rows, img_cols, channels = 256, 256, 3
+
     input_shape = (img_rows, img_cols, channels)
-
+    
     model = Sequential()
-
+    
     # Primera capa convolucional y de max pooling
-    model.add(Conv2D(6, (5, 5), padding='same', activation='relu',
-              input_shape=input_shape, kernel_initializer=HeNormal()))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-
+    model.add(Conv2D(64, (3, 3), padding='same', activation='relu', input_shape=input_shape, kernel_initializer=he_normal()))
+    model.add(Conv2D(64, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
+    
     # Segunda capa convolucional y de max pooling
-    model.add(Conv2D(16, (5, 5), padding='same',
-              activation='relu', kernel_initializer=HeNormal()))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-
-    # Aplanamiento de las capas para pasar a las capas completamente conectadas
-    model.add(Flatten())
-
+    model.add(Conv2D(128, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(Conv2D(128, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
+    
+    # Tercera capa convolucional y de max pooling
+    model.add(Conv2D(256, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(Conv2D(256, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
+    
+    # Cuarta capa convolucional y de max pooling
+    model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
+    
+    # Quinta capa convolucional y de max pooling
+    model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
+    
+    # Aplanar las capas para pasar a las capas completamente conectadas
+    model.add(GlobalAveragePooling2D())
+    
     # Capas completamente conectadas
-    model.add(Dense(120, activation='relu', kernel_initializer=HeNormal()))
-    model.add(Dense(84, activation='relu', kernel_initializer=HeNormal()))
-    # Asumiendo que tienes 29 clases en tu dataset
-    model.add(Dense(29, activation='softmax', kernel_initializer=HeNormal()))
+    model.add(Dense(4096, activation='relu', kernel_initializer=he_normal()))
+    model.add(Dense(29, activation='softmax', kernel_initializer=he_normal()))
 
     # Choose optimizer and compile the model
-    learning_rate = 0.001
+    learning_rate = 0.01
     mom = 0.8
-    sgd = SGD(learning_rate=learning_rate,momentum=mom)
-    model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+    adam = Adam(learning_rate=learning_rate,momentum=mom)
+    model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
     
     #Check model summary!
     print(model.summary())
     
     #Early stopping
     early_stop = EarlyStopping(monitor='val_loss', patience=10, mode='min', verbose=1)
+
+    # Reduce learning rate on plateau
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.000001)
     
     # Train the model
-    history = model.fit(train_generator, validation_data = val_generator, epochs=n_epochs, verbose=1, callbacks=[early_stop])
+    history = model.fit(train_generator, validation_data = val_generator, epochs=n_epochs, verbose=1, callbacks=[early_stop, reduce_lr])
     
     # Evaluate the model on the validation set
     loss, accuracy = model.evaluate(val_generator, verbose=1)
@@ -183,7 +200,7 @@ def train_lenet():
     plot_training_curve(history)
     plot_loss_variation(history)
     print('Plotting curves done')
-
+    
 if __name__ == "__main__":
     train_cnn()
 

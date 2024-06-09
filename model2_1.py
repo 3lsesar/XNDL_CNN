@@ -161,7 +161,7 @@ def train_cnn():
     
     # Capas completamente conectadas
     model.add(Dense(4096, activation='relu', kernel_initializer=he_normal()))
-    model.add(Dense(29, activation='softmax', kernel_initializer=he_normal()))  # Cambiar a 29, que es el número de clases en tu dataset
+    model.add(Dense(29, activation='softmax', kernel_initializer=he_normal()))
 
     # Choose optimizer and compile the model
     learning_rate = 0.001
@@ -197,18 +197,6 @@ def train_cnn():
     plot_training_curve(history)
     plot_loss_variation(history)
     print('Plotting curves done')
-    
-    # Save and download the model with the name of the file
-    model_filename = f'MAMe_model_1'
-    model.save(model_filename)
-    print(f'Model saved as {model_filename}')
-    
-    # Save all outputs in a folder with the name of the file
-    output_folder = f'outputs_{model_filename}'
-    os.makedirs(output_folder, exist_ok=True)
-    plot_training_curve(history)
-    plot_loss_variation(history)
-    print(f'Outputs saved in {output_folder}')
 
 if __name__ == "__main__":
     train_cnn()

@@ -1,0 +1,7 @@
+model1 --> base
+model2 --> canvi arquitectura (augmentem complexitat en busca de millorar resultats)
+model3 --> SGD to Adam (Adam surt de minims locals, busquem millorar resultats) + augmentem numero de epochs (veure si convergia o no, el early stopping fara que no sigui un problema)
+model4 --> Reduce LR on Plateau (veure si el model pot aprendre més amb un LR més petit un cop ja no millora amb el LR actual, iterativament)
+model5 --> Batch Normalization (Batch normalization can help improve the training speed and stability)
+###
+model6 --> Dropouts (no fet)
