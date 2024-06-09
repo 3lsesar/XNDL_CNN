@@ -24,41 +24,42 @@ tf.random.set_seed(314)
 
 batch_size = 128
 n_epochs = 200
+img_size = (256, 256)
 
-train_datagen = ImageDataGenerator(
-    rescale=1 / 255.0,
-    horizontal_flip=True)
+def parse_image(filename, label):
+    image = tf.io.read_file(filename)
+    image = tf.image.decode_jpeg(image, channels=3)
+    image = tf.image.resize(image, img_size)
+    image = tf.image.convert_image_dtype(image, tf.float32) / 255.0
+    return image, label
 
-train_generator = train_datagen.flow_from_directory(
-    directory=os.path.join(DATASET_PATH,'train'),
-    target_size=(256, 256),
-    color_mode="rgb",
-    batch_size=batch_size,
-    class_mode="categorical",
-    shuffle=True,
-    seed=42)
+def load_dataset(directory, subset):
+    dataset_dir = os.path.join(directory, subset)
+    classes = sorted([d for d in os.listdir(dataset_dir) if os.path.isdir(os.path.join(dataset_dir, d))])
+    class_indices = dict((name, index) for index, name in enumerate(classes))
 
-val_datagen = ImageDataGenerator(
-    rescale=1 / 255.0)
+    filepaths = []
+    labels = []
 
-val_generator = val_datagen.flow_from_directory(
-    directory=os.path.join(DATASET_PATH,'val'),
-    target_size=(256, 256),
-    color_mode="rgb",
-    batch_size=batch_size,
-    class_mode="categorical",
-    shuffle=False)
+    for class_name in classes:
+        class_dir = os.path.join(dataset_dir, class_name)
+        for fname in os.listdir(class_dir):
+            if fname.endswith('.jpg'):
+                filepaths.append(os.path.join(class_dir, fname, fname))
+                labels.append(class_indices[class_name])
 
-test_datagen = ImageDataGenerator(
-    rescale=1 / 255.0)
+    filepaths = np.array(filepaths)
+    labels = np.array(labels)
+    labels = tf.keras.utils.to_categorical(labels, num_classes=len(classes))
 
-test_generator = test_datagen.flow_from_directory(
-    directory=os.path.join(DATASET_PATH,'test'),
-    target_size=(256, 256),
-    color_mode="rgb",
-    batch_size=batch_size,
-    class_mode="categorical",
-    shuffle=False)
+    dataset = tf.data.Dataset.from_tensor_slices((filepaths, labels))
+    if subset == 'train':
+        dataset = dataset.shuffle(len(filepaths))
+    dataset = dataset.map(parse_image, num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
+    return dataset
+
 
 def load_data_labels(filename):
     labels = []
@@ -89,7 +90,7 @@ def plot_training_curve(history):
     # Save the training curves with a timestamp
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     print('Timestamp curves of this experiment:',timestamp)
-    plt.savefig(f'training_curves_{timestamp}.pdf')
+    plt.savefig(f'training_curves_model2.pdf')
 
 
 def plot_loss_variation(history):
@@ -133,27 +134,37 @@ def train_cnn():
     
     # Primera capa convolucional y de max pooling
     model.add(Conv2D(64, (3, 3), padding='same', activation='relu', input_shape=input_shape, kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(Conv2D(64, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
     
     # Segunda capa convolucional y de max pooling
     model.add(Conv2D(128, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(Conv2D(128, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
     
     # Tercera capa convolucional y de max pooling
     model.add(Conv2D(256, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(Conv2D(256, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
     
     # Cuarta capa convolucional y de max pooling
     model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
     
     # Quinta capa convolucional y de max pooling
     model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
     
     # Aplanar las capas para pasar a las capas completamente conectadas
@@ -161,45 +172,51 @@ def train_cnn():
     
     # Capas completamente conectadas
     model.add(Dense(4096, activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(Dense(29, activation='softmax', kernel_initializer=he_normal()))
 
     # Choose optimizer and compile the model
-    learning_rate = 0.01
-    adam = Adam(learning_rate=learning_rate)
-    model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
+    learning_rate = 0.001
+    sgd = Adam(learning_rate=learning_rate)
+    model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
     
     #Check model summary!
     print(model.summary())
     
     #Early stopping
     early_stop = EarlyStopping(monitor='val_loss', patience=10, mode='min', verbose=1)
-
-    # Reduce learning rate on plateau
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.000001)
     
     # Train the model
-    history = model.fit(train_generator, validation_data = val_generator, epochs=n_epochs, verbose=1, callbacks=[early_stop, reduce_lr])
-    
-    # Evaluate the model on the validation set
-    loss, accuracy = model.evaluate(val_generator, verbose=1)
+    train_dataset = load_dataset(DATASET_PATH, 'train')
+    val_dataset = load_dataset(DATASET_PATH, 'val')
+
+    history = model.fit(train_dataset, validation_data=val_dataset, epochs=n_epochs, verbose=1, callbacks=[early_stop])
+
+    loss, accuracy = model.evaluate(val_dataset, verbose=1)
     print("Validation loss: {:.3f}, Validation accuracy: {:.3f}".format(loss, accuracy))
-    #Classification outputs
-    y_pred = model.predict(val_generator)
-    y_true = val_generator.classes
-    print('y_pred:',y_pred)
-    #Assign most likely label
+
+    y_pred = model.predict(val_dataset)
+    y_true = np.concatenate([y for x, y in val_dataset], axis=0)
     y_pred = np.argmax(y_pred, axis=1)
-    #Read data labels
-    labels = load_data_labels(os.path.join(METADATA_PATH,'MAMe_labels.csv'))
-    print(labels) 
-    print(classification_report(y_true, y_pred,target_names=labels))
+    y_true = np.argmax(y_true, axis=1)
+
+    labels = load_data_labels(os.path.join(METADATA_PATH, 'MAMe_labels.csv'))
+    print(classification_report(y_true, y_pred, target_names=labels))
     print(confusion_matrix(y_true, y_pred))
-    #Curves
+
     print('Plotting curves')
     plot_training_curve(history)
-    plot_loss_variation(history)
     print('Plotting curves done')
-    
-if __name__ == "__main__":
-    train_cnn()
+
+if __name__ == "__main__":   
+    from time import time
+    start = time()
+    iterations = 1
+    for i in range(iterations):
+        print()
+        print("#" * 50)
+        print(f'Iteration {i+1}/{iterations}')
+        print("#" * 50)
+        train_cnn()
+    print('Total time:',time()-start)
 

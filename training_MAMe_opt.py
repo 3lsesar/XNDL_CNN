@@ -1,29 +1,24 @@
-# VGGNet
-
 import os
 import csv
 import datetime
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from keras.layers import Conv2D, GlobalAveragePooling2D, Dense, Flatten, BatchNormalization, LayerNormalization
-from keras.optimizers import SGD, Adam, Adamax
+from tensorflow.keras.layers import Conv2D, GlobalAveragePooling2D, Dense
+from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.initializers import he_normal
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
-from keras.utils import to_categorical
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-
-
-DATASET_PATH = '/gpfs/scratch/nct_299/MAMe/MAMe_data_256/data_256'
-METADATA_PATH = '/gpfs/scratch/nct_299/MAMe/MAMe_metadata'
+from tensorflow.keras.callbacks import EarlyStopping
 
 np.random.seed(42)
 tf.random.set_seed(314)
 
+DATASET_PATH = '/gpfs/scratch/nct_299/MAMe/MAMe_data_256/data_256'
+METADATA_PATH = '/gpfs/scratch/nct_299/MAMe/MAMe_metadata'
+
 batch_size = 128
-n_epochs = 200
+n_epochs = 50
 img_size = (256, 256)
 
 def parse_image(filename, label):
@@ -60,7 +55,6 @@ def load_dataset(directory, subset):
     dataset = dataset.prefetch(buffer_size=tf.data.experimental.AUTOTUNE)
     return dataset
 
-
 def load_data_labels(filename):
     labels = []
     with open(filename, 'r') as f:
@@ -70,7 +64,6 @@ def load_data_labels(filename):
     return labels
 
 def plot_training_curve(history):
-    # Plot the training and validation loss and accuracy
     fig, ax = plt.subplots(2, 1, figsize=(8, 8))
     ax[0].plot(history.history['loss'], label='train_loss')
     ax[0].plot(history.history['val_loss'], label='val_loss')
@@ -86,96 +79,31 @@ def plot_training_curve(history):
     ax[1].set_title('Training and Validation Accuracy')
     ax[1].grid(True)
     ax[1].legend()
-    
-    # Save the training curves with a timestamp
+
     timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    print('Timestamp curves of this experiment:',timestamp)
-    plt.savefig(f'training_curves_model2.pdf')
-
-
-def plot_loss_variation(history):
-    # Calcula la variació de la pèrdua per època
-    train_loss = history.history['loss']
-    val_loss = history.history['val_loss']
-
-    train_loss_variation = np.diff(train_loss)
-    val_loss_variation = np.diff(val_loss)
-
-    # Ploteja la variació de la pèrdua
-    plt.figure(figsize=(12, 6))
-
-    plt.subplot(1, 2, 1)
-    plt.plot(train_loss_variation, label='Variació de Pèrdua d\'Entrenament')
-    plt.xlabel('Èpoques')
-    plt.ylabel('Variació de la Pèrdua')
-    plt.title('Variació de la Pèrdua d\'Entrenament')
-    plt.legend()
-    plt.grid(True)
-
-    plt.subplot(1, 2, 2)
-    plt.plot(val_loss_variation, label='Variació de Pèrdua de Validació')
-    plt.xlabel('Èpoques')
-    plt.ylabel('Variació de la Pèrdua')
-    plt.title('Variació de la Pèrdua de Validació')
-    plt.legend()
-    plt.grid(True)
-
-    plt.tight_layout()
-    plt.show()
-
+    print('Timestamp curves of this experiment:', timestamp)
+    plt.savefig(f'iter{i}_training_curves_{timestamp}.png')
 
 def train_cnn():
-    # Definir la arquitectura del modelo siguiendo la imagen
     img_rows, img_cols, channels = 256, 256, 3
-
     input_shape = (img_rows, img_cols, channels)
-    
-    model = Sequential()
-    
-    # Primera capa convolucional y de max pooling
-    model.add(Conv2D(64, (3, 3), padding='same', activation='relu', input_shape=input_shape, kernel_initializer=he_normal()))
-    model.add(Conv2D(64, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
-    model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
-    
-    # Segunda capa convolucional y de max pooling
-    model.add(Conv2D(128, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
-    model.add(Conv2D(128, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
-    model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
-    
-    # Tercera capa convolucional y de max pooling
-    model.add(Conv2D(256, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
-    model.add(Conv2D(256, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
-    model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
-    
-    # Cuarta capa convolucional y de max pooling
-    model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
-    model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
-    model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
-    
-    # Quinta capa convolucional y de max pooling
-    model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
-    model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
-    model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
-    
-    # Aplanar las capas para pasar a las capas completamente conectadas
-    model.add(GlobalAveragePooling2D())
-    
-    # Capas completamente conectadas
-    model.add(Dense(4096, activation='relu', kernel_initializer=he_normal()))
-    model.add(Dense(29, activation='softmax', kernel_initializer=he_normal()))
+    model = Sequential([
+        Conv2D(32, (3, 3), padding='same', activation='relu', input_shape=input_shape, kernel_initializer=he_normal()),
+        Conv2D(32, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()),
+        GlobalAveragePooling2D(),
+        Dense(16, activation='relu', kernel_initializer=he_normal()),
+        Dense(29, activation='softmax', kernel_initializer=he_normal())
+    ])
 
-    # Choose optimizer and compile the model
-    learning_rate = 0.001
-    sgd = Adam(learning_rate=learning_rate)
+    learning_rate = 0.1
+    mom = 0.8
+    sgd = SGD(learning_rate=learning_rate, momentum=mom)
     model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
-    
-    #Check model summary!
+
     print(model.summary())
-    
-    #Early stopping
-    early_stop = EarlyStopping(monitor='val_loss', patience=10, mode='min', verbose=1)
-    
-    # Train the model
+
+    early_stop = EarlyStopping(monitor='val_loss', patience=5, mode='min', verbose=1)
+
     train_dataset = load_dataset(DATASET_PATH, 'train')
     val_dataset = load_dataset(DATASET_PATH, 'val')
 
@@ -197,7 +125,7 @@ def train_cnn():
     plot_training_curve(history)
     print('Plotting curves done')
 
-if __name__ == "__main__":   
+if __name__ == "__main__":
     from time import time
     start = time()
     iterations = 1
@@ -208,4 +136,3 @@ if __name__ == "__main__":
         print("#" * 50)
         train_cnn()
     print('Total time:',time()-start)
-

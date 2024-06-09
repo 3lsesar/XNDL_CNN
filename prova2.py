@@ -5,7 +5,7 @@ import csv
 import datetime
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from keras.layers import Conv2D, GlobalAveragePooling2D, Dense, Flatten, BatchNormalization, LayerNormalization
+from keras.layers import Conv2D, GlobalAveragePooling2D, Dense, BatchNormalization, LayerNormalization, Dropout
 from keras.optimizers import SGD, Adam, Adamax
 from tensorflow.keras.initializers import he_normal
 import numpy as np
@@ -134,27 +134,37 @@ def train_cnn():
     
     # Primera capa convolucional y de max pooling
     model.add(Conv2D(64, (3, 3), padding='same', activation='relu', input_shape=input_shape, kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(Conv2D(64, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
     
     # Segunda capa convolucional y de max pooling
     model.add(Conv2D(128, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(Conv2D(128, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
     
     # Tercera capa convolucional y de max pooling
     model.add(Conv2D(256, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(Conv2D(256, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
     
     # Cuarta capa convolucional y de max pooling
     model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
     
     # Quinta capa convolucional y de max pooling
     model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
     model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
     
     # Aplanar las capas para pasar a las capas completamente conectadas
@@ -162,6 +172,8 @@ def train_cnn():
     
     # Capas completamente conectadas
     model.add(Dense(4096, activation='relu', kernel_initializer=he_normal()))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.5))
     model.add(Dense(29, activation='softmax', kernel_initializer=he_normal()))
 
     # Choose optimizer and compile the model
@@ -175,11 +187,14 @@ def train_cnn():
     #Early stopping
     early_stop = EarlyStopping(monitor='val_loss', patience=10, mode='min', verbose=1)
     
+    #Reduce learning rate on plateau
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=5, min_lr = 1e-6, verbose=1)
+
     # Train the model
     train_dataset = load_dataset(DATASET_PATH, 'train')
     val_dataset = load_dataset(DATASET_PATH, 'val')
 
-    history = model.fit(train_dataset, validation_data=val_dataset, epochs=n_epochs, verbose=1, callbacks=[early_stop])
+    history = model.fit(train_dataset, validation_data=val_dataset, epochs=n_epochs, verbose=1, callbacks=[early_stop, reduce_lr])
 
     loss, accuracy = model.evaluate(val_dataset, verbose=1)
     print("Validation loss: {:.3f}, Validation accuracy: {:.3f}".format(loss, accuracy))

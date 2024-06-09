@@ -11,7 +11,7 @@ from tensorflow.keras.initializers import he_normal
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from keras.callbacks import EarlyStopping
 from keras.utils import to_categorical
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
@@ -166,7 +166,8 @@ def train_cnn():
 
     # Choose optimizer and compile the model
     learning_rate = 0.001
-    sgd = Adam(learning_rate=learning_rate)
+    mom = 0.8
+    sgd = SGD(learning_rate=learning_rate,momentum=mom)
     model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
     
     #Check model summary!
