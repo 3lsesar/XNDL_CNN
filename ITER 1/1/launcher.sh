@@ -8,5 +8,5 @@
 #SBATCH --gres gpu:4
 #SBATCH --time=24:00:00
 module purge; module load tensorflow
-python model3_3.py
+python model2_11.py
 

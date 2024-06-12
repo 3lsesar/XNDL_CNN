@@ -15,3 +15,6 @@ more <archivo>
 cat <archivo>
 
 #copiar cosas fuera del bsc
+
+
+#squeue --start  (estimacio de la hora en que es pujara)

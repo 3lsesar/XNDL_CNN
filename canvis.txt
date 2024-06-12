@@ -3,6 +3,9 @@ model1 --> base
 (2914565, 2914670) model3 --> SGD to Adam (Adam surt de minims locals, busquem millorar resultats) + augmentem numero de epochs (veure si convergia o no, el early stopping fara que no sigui un problema)
 -(2914582) model4 --> Batch Normalization (Batch normalization can help improve the training speed and stability)
 -(2914592) model5[Adam], (2914729) model52[SGD] --> Reduce LR on Plateau (veure si el model pot aprendre més amb un LR més petit un cop ja no millora amb el LR actual, iterativament)
+
+
+
 ###
 model6 --> Dropouts (no fet)
 (2914593)prova --> tots
