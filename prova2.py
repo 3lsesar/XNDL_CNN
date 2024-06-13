@@ -166,6 +166,7 @@ def train_cnn():
     model.add(Conv2D(512, (3, 3), padding='same', activation='relu', kernel_initializer=he_normal()))
     model.add(BatchNormalization())
     model.add(tf.keras.layers.MaxPooling2D((2, 2), strides=(2, 2)))
+    model.add(Dropout(0.3))
     
     # Aplanar las capas para pasar a las capas completamente conectadas
     model.add(GlobalAveragePooling2D())
@@ -173,7 +174,7 @@ def train_cnn():
     # Capas completamente conectadas
     model.add(Dense(4096, activation='relu', kernel_initializer=he_normal()))
     model.add(BatchNormalization())
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.4))
     model.add(Dense(29, activation='softmax', kernel_initializer=he_normal()))
 
     # Choose optimizer and compile the model

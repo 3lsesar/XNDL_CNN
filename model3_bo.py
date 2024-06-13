@@ -185,7 +185,7 @@ def train_cnn():
 
     # Early stopping
     early_stop = EarlyStopping(
-        monitor='val_loss', patience=10, mode='min', verbose=1)
+        monitor='val_loss', patience=10, mode='min', verbose=1, restore_best_weights=True)
 
     # Train the model
     train_dataset = load_dataset(DATASET_PATH, 'train')
