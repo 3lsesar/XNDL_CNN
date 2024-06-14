@@ -1,0 +1,37 @@
+unload bsc/1.0 (PATH, MANPATH)
+load openmpi/4.1.5-gcc (LD_LIBRARY_PATH)
+load HDF5/1.14.1-2 (PATH, LD_LIBRARY_PATH, LIBRARY_PATH, C_INCLUDE_PATH,
+CPLUS_INCLUDE_PATH, HDF5_DIR, HDF5_ROOT) 
+load mkl/2024.0 (LD_LIBRARY_PATH)
+load PYTHON/3.11.5 (PATH, MANPATH, LD_LIBRARY_PATH, LIBRARY_PATH,
+PKG_CONFIG_PATH, C_INCLUDE_PATH, CPLUS_INCLUDE_PATH, PYTHONHOME, PYTHONPATH) 
+load NCCL/2.19.4 (LD_LIBRARY_PATH, LIBRARY_PATH, C_INCLUDE_PATH,
+CPLUS_INCLUDE_PATH) 
+load GCC/11.4.0 (PATH, LD_LIBRARY_PATH, LIBRARY_PATH, C_INCLUDE_PATH,
+CPLUS_INCLUDE_PATH, HDF5_DIR, HDF5_ROOT) 
+load BIN_UTILS/2.37 (PATH, LD_LIBRARY_PATH, LIBRARY_PATH, C_INCLUDE_PATH,
+CPLUS_INCLUDE_PATH, HDF5_DIR, HDF5_ROOT) 
+load CUDA/12.1 (PATH, MANPATH, LD_LIBRARY_PATH, LIBRARY_PATH, C_INCLUDE_PATH,
+CPLUS_INCLUDE_PATH, CUDA_HOME, CUDA_VERSION, CUDA_INC, CUDA_INSTALL_PATH) 
+load CUDNN/8.8/cuda12 (LD_LIBRARY_PATH, LIBRARY_PATH, C_INCLUDE_PATH,
+CPLUS_INCLUDE_PATH, CUDNN_LIB_DIR, CUDNN_LIBRARY, CUDNN_INCLUDE_DIR) 
+load TENSORRT/8.6/cuda12 (PATH, LD_LIBRARY_PATH, LIBRARY_PATH, C_INCLUDE_PATH,
+CPLUS_INCLUDE_PATH) 
+2024-06-14 00:38:48.012184: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2024-06-14 00:38:48.060957: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX512_FP16, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+/apps/ACC/PYTHON/3.11.5/GCC/lib/python3.11/site-packages/keras/src/layers/convolutional/base_conv.py:107: UserWarning: Do not pass an `input_shape`/`input_dim` argument to a layer. When using Sequential models, prefer using an `Input(shape)` object as the first layer in the model instead.
+  super().__init__(activity_regularizer=activity_regularizer, **kwargs)
+2024-06-14 00:38:52.410986: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1928] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 62623 MB memory:  -> device: 0, name: NVIDIA H100, pci bus id: 0000:1b:00.0, compute capability: 9.0
+2024-06-14 00:38:52.411906: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1928] Created device /job:localhost/replica:0/task:0/device:GPU:1 with 62623 MB memory:  -> device: 1, name: NVIDIA H100, pci bus id: 0000:2c:00.0, compute capability: 9.0
+2024-06-14 00:38:52.412436: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1928] Created device /job:localhost/replica:0/task:0/device:GPU:2 with 62623 MB memory:  -> device: 2, name: NVIDIA H100, pci bus id: 0000:9d:00.0, compute capability: 9.0
+2024-06-14 00:38:52.413204: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1928] Created device /job:localhost/replica:0/task:0/device:GPU:3 with 62623 MB memory:  -> device: 3, name: NVIDIA H100, pci bus id: 0000:ad:00.0, compute capability: 9.0
+Traceback (most recent call last):
+  File "/gpfs/home/nct/nct01124/PRACTICA_2/ITER4/model4_31/model4_31.py", line 219, in <module>
+    train_cnn()
+  File "/gpfs/home/nct/nct01124/PRACTICA_2/ITER4/model4_31/model4_31.py", line 180, in train_cnn
+    sgd = SGD(learning_rate=learning_rate, momentum=mom)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/apps/ACC/PYTHON/3.11.5/GCC/lib/python3.11/site-packages/keras/src/optimizers/sgd.py", line 75, in __init__
+    raise ValueError("`momentum` must be a float between [0, 1].")
+ValueError: `momentum` must be a float between [0, 1].
